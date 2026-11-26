@@ -644,7 +644,7 @@ function tpsReport() {
   const worst = tpsLog.length ? Math.min(...tpsLog.map(x => x.tps)) : null;
   let ents = 0;
   try { for (const d of ["overworld", "nether", "the_end"]) ents += world.getDimension(d).getEntities().length; } catch {}
-  return `§6[ZephyCube Log] TPS§r now ${c(n10)}${f(n10)}§r | 1m ${c(m1)}${f(m1)}§r | 5m ${c(m5)}${f(m5)}§r | worst ${c(worst)}${f(worst)}§r | players ${world.getAllPlayers().length} | entities ${ents}`;
+  return `§6TPS§r now ${c(n10)}${f(n10)}§r | 1m ${c(m1)}${f(m1)}§r | 5m ${c(m5)}${f(m5)}§r | worst ${c(worst)}${f(worst)}§r | players ${world.getAllPlayers().length} | entities ${ents}`;
 }
 
 // Way 1: the commands /zc:logs and /zc:tps (works with cheats off). A pack can only use ONE command namespace.

@@ -1,4 +1,4 @@
-# ZephyCube Log 1.8.3
+# ZephyCube Log 1.8.4
 
 Activity logger with an in-game viewer, a chest scanner and a TPS monitor. Originally created by iHarvs (@iharvs). Logs are stored in the world, one set per day.
 

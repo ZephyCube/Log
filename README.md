@@ -1,6 +1,6 @@
 <p align="center"><img src="logo.png" alt="ZephyCube" width="160"></p>
 
-# ZephyCube Log v1.8.3
+# ZephyCube Log v1.8.4
 
 Activity logger with an in-game viewer, a chest scanner and a TPS monitor. Originally created by iHarvs (@iharvs). Logs are stored in the world, one set per day.
 
@@ -9,7 +9,7 @@ Activity logger with an in-game viewer, a chest scanner and a TPS monitor. Origi
 
 ## Install
 
-Download `ZephyCubeLog-v1.8.3-BP.mcaddon` (behavior pack; this add-on has no resource pack) or `ZephyCubeLog-v1.8.3.mcpack` from the Releases page and open it. Or install by hand: copy the `ZephyCubeLog` folder into your world's `behavior_packs` folder and add its `uuid` and `version` (from `manifest.json`) to the world's `world_behavior_packs.json`. Needs `@minecraft/server` 2.8.0 and `@minecraft/server-ui` 2.0.0.
+Download `ZephyCubeLog-v1.8.4-BP.mcaddon` (behavior pack; this add-on has no resource pack) or `ZephyCubeLog-v1.8.4.mcpack` from the Releases page and open it. Or install by hand: copy the `ZephyCubeLog` folder into your world's `behavior_packs` folder and add its `uuid` and `version` (from `manifest.json`) to the world's `world_behavior_packs.json`. Needs `@minecraft/server` 2.8.0 and `@minecraft/server-ui` 2.0.0.
 
 ## Features (modules)
 `/zc:logmodules` opens a menu with a switch per module (from the console it lists them); `/zc:logmodules <module> on|off` also works. Saved in the world. Turning a module off stops new lines of that kind; saved lines stay readable.
