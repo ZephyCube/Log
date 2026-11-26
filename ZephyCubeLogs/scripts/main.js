@@ -3,6 +3,7 @@ import * as mc from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { defineModules } from "./modules.js";
 import { registerPerms } from "./perms.js";
+import { startAntiDupe, ANTI_DUPE_MODULES } from "./antidupe.js";
 
 const { world, system } = mc;
 
@@ -13,13 +14,13 @@ const modOn = defineModules("zclog", "zc:logmodules", "Logs", [
   { key: "entities", label: "entity interact, hurt, death, projectiles, taming, mob farm notes" },
   { key: "items", label: "item use, craft, drop, pickup, inventory changes, container take/put" },
   { key: "redstone", label: "levers, buttons, pistons, pressure plates, tripwires, target blocks" },
-  { key: "dupes", label: "possible dupe and illegal stack detection (and its per-second scan)" },
   { key: "staff_audit", label: "staff actions fed in by AdminTools (zc:audit)" },
   { key: "movement", label: "throttled movement samples" },
   { key: "chat", label: "chat messages" },
   { key: "console", label: "copy of every log line to the server console / ContentLog file" },
   { key: "scanner", label: "chest scanner item (right-click a container to see its history)" },
   { key: "player_tag", label: "store each player's name and id on the player (BedrockToolChest world editor)" },
+  ...ANTI_DUPE_MODULES,
 ]);
 
 /*
@@ -119,25 +120,7 @@ const CONFIG = {
   farmRadius: 24,
   farmExpireMin: 15,
   logChat: true,            // chat messages (needs the chatSend event; skipped with a log line if the server does not offer it)
-  logPossibleDupe: true,    // flag items that appear from nowhere
-  dupeCheckTicks: 20,       // how often each player is checked (20 = every second)
-  dupeMinAmount: 16,        // ordinary items are flagged only if this many appear at once
-  dupeAlertOperators: true,  // also send a chat message to online operators
-  dupeConfirmChecks: 1,      // a gain must still be unexplained this many checks later before it is flagged
-  dupeKitGraceSec: 30,       // after CrossBlades (duel/FFA/kit) activity, skip the dupe check this long (kits and inventory restores add items)
-  dupeBulkGainTypes: 5,      // this many new item types at once = a kit or inventory restore, not a dupe
-  dupeBreakAllowance: 6,     // items one broken block may explain for 5 seconds (fortune, ores, crops)
-  dupePlacedMemoryMin: 30,   // minutes: mining back a block you placed is never a dupe
   logDeathInventory: true,   // list everything a player carried at the moment they died
-  // Valuable items: flagged even if just 1 appears from nowhere
-  dupeWatchItems: [
-    "minecraft:diamond", "minecraft:diamond_block", "minecraft:emerald", "minecraft:emerald_block",
-    "minecraft:netherite_ingot", "minecraft:netherite_block", "minecraft:netherite_scrap", "minecraft:ancient_debris",
-    "minecraft:gold_block", "minecraft:iron_block", "minecraft:totem_of_undying", "minecraft:elytra",
-    "minecraft:enchanted_golden_apple", "minecraft:nether_star", "minecraft:beacon", "minecraft:dragon_egg",
-    "minecraft:shulker_shell", "minecraft:undyed_shulker_box", "minecraft:trident", "minecraft:mace",
-    "minecraft:heavy_core", "minecraft:end_crystal", "minecraft:tnt"
-  ],
 };
 
 const lastPos = new Map();
@@ -244,10 +227,7 @@ const FORMAT = {
   tripwire: r => `${cPlayer(r.player)} tripped a ${cBlock("tripwire")} ${at(r.location, r.dimension)}`,
   target_hit: r => `${cPlayer(r.player)} hit a ${cBlock("target")} block ${at(r.location, r.dimension)}`,
   staff_audit: r => `§l§6STAFF§r§f ${cPlayer(r.player)} ${r.action}${r.target ? ` -> ${r.target}` : ""}${r.detail ? `: ${r.detail}` : ""}`,
-  possible_dupe: r =>
-    `§l§cPOSSIBLE DUPE§r§f ${cPlayer(r.player)} gained ${itemList(r.items)} from nowhere ${at(r.location, r.dimension)}${r.source ? ` | likely source: ${r.source}` : ""}`,
-  illegal_stack: r =>
-    `§l§cIMPOSSIBLE STACK§r§f ${cPlayer(r.player)} is holding ${COLOR.item}${short(r.stack)}${T} ${at(r.location, r.dimension)}`,
+  dupe_blocked: r => `§l§cANTI-DUPE§r§f ${r.text}${r.dimension && r.dimension !== "minecraft:overworld" ? ` in ${COLOR.dimension}${short(r.dimension)}${T}` : ""}`,
   death_inventory: r =>
     `§l§6INVENTORY AT DEATH§r§f ${cPlayer(r.player)} (${r.total ?? 0} items) ${at(r.location, r.dimension)}: ` +
     ((r.items ?? []).length ? r.items.map(i => `${COLOR.item}${i}${T}`).join(", ") : "nothing"),
@@ -267,7 +247,7 @@ const CATEGORY = {
   item_use: "I", craft: "I", item_drop: "I", item_pickup: "I", inventory_change: "I",
   container_open: "I", entity_container_open: "I", container_take: "I", container_put: "I",
   cursor_grab: "I", cursor_release: "I",
-  staff_audit: "S", possible_dupe: "D", illegal_stack: "D", server_lag: "P", chat: "P", mob_farm: "E", mob_farm_end: "E",
+  staff_audit: "S", dupe_blocked: "D", server_lag: "P", chat: "P", mob_farm: "E", mob_farm_end: "E",
   lever: "R", button_push: "R", piston: "R", pressure_plate: "R", tripwire: "R", target_hit: "R",
 };
 
@@ -372,7 +352,7 @@ system.runInterval(() => {
 }, 200);
 
 const MOD_OF = { movement: "movement", chat: "chat" };
-const CAT_MOD = { P: "player", B: "blocks", E: "entities", I: "items", R: "redstone", D: "dupes", S: "staff_audit" };
+const CAT_MOD = { P: "player", B: "blocks", E: "entities", I: "items", R: "redstone", S: "staff_audit" }; // D (anti-dupe) is switched per anti-dupe module
 function emit(type, data = {}) {
   if (!modOn(MOD_OF[type] ?? CAT_MOD[CATEGORY[type] ?? "P"])) return;
   if (FARM_QUIET.has(type) && (type === "piston" || data.mobVictim) && farmAt(data.dimension, data.location)) return;
@@ -545,7 +525,7 @@ const FILTERS = [
   { label: "Entity\n§8fights, kills, taming", cat: "E" },
   { label: "Items\n§8chests, drops, crafting", cat: "I" },
   { label: "Redstone\n§8pistons, levers, buttons", cat: "R" },
-  { label: "§cPossible dupes\n§8items from nowhere", cat: "D" },
+  { label: "§cAnti-dupe\n§8dupes that were blocked", cat: "D" },
   { label: "Search\n§8player name, block, anything", cat: "search" },
 ];
 
@@ -1358,232 +1338,14 @@ if (CONFIG.logRedstone) {
   });
 }
 
-// ---- Possible dupe detection --------------------------------------------
-// Every second, count everything each player is carrying. If items appear
-// from nowhere (nothing picked up, no container open, nothing else used up,
-// not in creative), it is logged as a POSSIBLE dupe. It is a hint, not proof.
-if (CONFIG.logPossibleDupe) {
-  const carried = new Map();       // player id -> { counts, tick }
-    const containerOpen = new Set(); // player ids with a chest etc open right now
-  const containerTick = new Map(); // player id -> last tick they opened or closed one
-  const watch = new Set(CONFIG.dupeWatchItems);
-  const credits = new Map();       // player id -> [{ item ("*" = any), amount, expires }]
-  const pending = new Map();       // player id -> { gains, checksLeft }
-  const cbLast = new Map();        // player id -> last tick CrossBlades was active for them
-  subscribe("playerSpawn (dupe grace)", world.afterEvents.playerSpawn, e => { if (e.initialSpawn && e.player) cbLast.set(e.player.id, system.currentTick); });
-  function addCredit(id, item, amount, ttl) {
-    const list = credits.get(id) ?? [];
-    list.push({ item, amount, expires: system.currentTick + ttl });
-    if (list.length > 400) list.splice(0, list.length - 400);
-    credits.set(id, list);
+// ---- Anti-dupe (DupeGuard + Anti Dupe Bundle, see antidupe.js) -------------
+// Replaces the old "possible dupe" hints: dupes are now blocked, and each block is logged (DUPE) and sent to staff.
+startAntiDupe(modOn, (text, data = {}) => {
+  emit("dupe_blocked", { text, ...data });
+  for (const p of world.getAllPlayers()) {
+    try { if (canViewLogs(p)) p.sendMessage(`§cAnti-dupe: ${text.replace(/§./g, "")}`); } catch {}
   }
-  // Use up credits for `need` items of one kind; returns what is still unexplained.
-  function takeCredit(id, item, need) {
-    const now = system.currentTick;
-    const list = (credits.get(id) ?? []).filter(c => c.expires > now && c.amount > 0);
-    for (const kind of [item, "*"]) {
-      for (const c of list) {
-        if (need <= 0) break;
-        if (c.item !== kind) continue;
-        const used = Math.min(c.amount, need);
-        c.amount -= used; need -= used;
-      }
-    }
-    credits.set(id, list.filter(c => c.amount > 0));
-    return need;
-  }
-  const EQUIP_SLOTS = ["Head", "Chest", "Legs", "Feet", "Offhand"];
-
-  const add = (counts, stack) => {
-    if (!stack) return;
-    counts[stack.typeId] = (counts[stack.typeId] ?? 0) + stack.amount;
-    if (stack.amount > (stack.maxAmount ?? 64)) counts["!illegal"] = `${stack.amount}x ${short(stack.typeId)}`;
-  };
-  const countCarried = player => {
-    const counts = {};
-    const inv = player.getComponent("minecraft:inventory")?.container;
-    if (inv) for (let i = 0; i < inv.size; i++) add(counts, inv.getItem(i));
-    try { add(counts, player.getComponent("minecraft:cursor_inventory")?.item); } catch {}
-    try {
-      const eq = player.getComponent("minecraft:equippable");
-      if (eq) for (const slot of EQUIP_SLOTS) add(counts, eq.getEquipment(slot));
-    } catch {}
-    return counts;
-  };
-
-  const touch = (player, open) => {
-    if (!isPlayer(player)) return;
-    containerTick.set(player.id, system.currentTick);
-    if (open) containerOpen.add(player.id); else containerOpen.delete(player.id);
-  };
-  // Attribution: remember what each player touched recently, so a dupe flag says where it likely came from.
-  const trail = new Map();   // player id -> [{ tick, text, loc, dim }]
-  const pistons = [];        // recent piston activity { tick, loc, dim }
-  const TRAIL_TICKS = 600;   // 30 seconds
-  const note = (player, text, loc, dim) => {
-    if (!isPlayer(player)) return;
-    const list = trail.get(player.id) ?? [];
-    list.push({ tick: system.currentTick, text, loc, dim });
-    while (list.length > 8) list.shift();
-    trail.set(player.id, list);
-  };
-  const where3 = l => l && typeof l.x === "number" ? `(${Math.floor(l.x)}, ${Math.floor(l.y)}, ${Math.floor(l.z)})` : "";
-  subscribe("playerInteractWithBlock (trail)", world.afterEvents.playerInteractWithBlock, e => {
-    if (!e.isFirstEvent) return;
-    note(e.player, `used ${short(safeType(e.block?.permutation))} ${where3(e.block?.location)}`, e.block?.location, e.block?.dimension?.id);
-  });
-  subscribe("playerInteractWithEntity (trail)", world.afterEvents.playerInteractWithEntity, e => {
-    note(e.player, `interacted with ${short(safeType(e.target))} ${where3(e.target?.location)}`, e.target?.location, e.target?.dimension?.id);
-  });
-  subscribe("pistonActivate (trail)", world.afterEvents.pistonActivate, e => {
-    pistons.push({ tick: system.currentTick, loc: e.block?.location, dim: e.block?.dimension?.id });
-    while (pistons.length > 40) pistons.shift();
-  });
-  const describeSource = (player, now) => {
-    const parts = [];
-    const recent = (trail.get(player.id) ?? []).filter(t => now - t.tick <= TRAIL_TICKS).slice(-3);
-    for (const t of recent) parts.push(`${t.text} ${Math.round((now - t.tick) / 20)}s ago`);
-    try {
-      const ride = player.getComponent("minecraft:riding")?.entityRidingOn;
-      if (ride) parts.push(`riding ${short(ride.typeId)}`);
-    } catch {}
-    const l = player.location;
-    for (const pi of pistons) {
-      if (now - pi.tick > 100 || pi.dim !== player.dimension?.id || !pi.loc) continue;
-      if (Math.abs(pi.loc.x - l.x) <= 8 && Math.abs(pi.loc.y - l.y) <= 8 && Math.abs(pi.loc.z - l.z) <= 8) {
-        parts.push(`piston ${where3(pi.loc)} fired ${Math.round((now - pi.tick) / 20)}s ago`); break;
-      }
-    }
-    try {
-      const h = player.getComponent("minecraft:inventory")?.container?.getItem(player.selectedSlotIndex);
-      if (h) parts.push(`holding ${short(h.typeId)}`);
-    } catch {}
-    return parts.join("; ") || "nothing recent (no chest, block, mount or piston)";
-  };
-
-  subscribe("blockContainerOpened", world.afterEvents.blockContainerOpened, e => note(e.openSource?.entity ?? e.player, `opened ${short(safeType(e.block?.permutation))} ${where3(e.block?.location)}`, e.block?.location, e.block?.dimension?.id));
-  subscribe("blockContainerOpened", world.afterEvents.blockContainerOpened, e => touch(e.openSource?.entity ?? e.player, true));
-  subscribe("blockContainerClosed", world.afterEvents.blockContainerClosed, e => touch(e.closeSource?.entity ?? e.player, false));
-  subscribe("entityContainerOpened", world.afterEvents.entityContainerOpened, e => touch(e.openSource?.entity ?? e.player, true));
-  subscribe("entityContainerClosed", world.afterEvents.entityContainerClosed, e => touch(e.closeSource?.entity ?? e.player, false));
-
-  subscribe("entityItemPickup", world.afterEvents.entityItemPickup, e => {
-    if (!isPlayer(e.entity)) return;
-    let stacks = [];
-    try { stacks = (e.items ?? []).map(x => x); } catch { try { stacks = Array.from(e.items); } catch {} }
-    for (const stack of stacks) addCredit(e.entity.id, stack.typeId, stack.amount, 200);
-  });
-
-  // Gravestones (Admin Tools) hand a player's saved items back: that is not a dupe.
-  subscribe("playerInteractWithEntity (grave)", world.afterEvents.playerInteractWithEntity, e => {
-    if (e.player && e.target?.typeId === "jm_at:grave") addCredit(e.player.id, "*", 2400, 400);
-  });
-  subscribe("playerInteractWithBlock (grave)", world.afterEvents.playerInteractWithBlock, e => {
-    if (e.player && e.block?.typeId === "jm_at:gravestone") addCredit(e.player.id, "*", 2400, 400);
-  });
-
-  // Things that explain a gain: picked-up items, blocks the player placed (mining it back
-  // returns the item), and blocks they just broke (their drops).
-  subscribe("playerPlaceBlock (dupe)", world.afterEvents.playerPlaceBlock, e => {
-    if (!e.player) return;
-    addCredit(e.player.id, safeType(e.block?.permutation), 1, CONFIG.dupePlacedMemoryMin * 1200);
-  });
-  subscribe("playerBreakBlock (dupe)", world.afterEvents.playerBreakBlock, e => {
-    if (!e.player) return;
-    addCredit(e.player.id, safeType(e.brokenBlockPermutation), 1, 100);
-    addCredit(e.player.id, "*", CONFIG.dupeBreakAllowance, 100);
-  });
-
-  subscribe("playerLeave", world.afterEvents.playerLeave, e => {
-    carried.delete(e.playerId); cbLast.delete(e.playerId); credits.delete(e.playerId); pending.delete(e.playerId); trail.delete(e.playerId);
-    containerOpen.delete(e.playerId); containerTick.delete(e.playerId);
-  });
-
-  const alertOperators = text => {
-    if (!CONFIG.dupeAlertOperators) return;
-    for (const p of world.getAllPlayers()) {
-      try { if (canViewLogs(p)) p.sendMessage(`§c[ZephyCubeLogs] §f${text}`); } catch {}
-    }
-  };
-
-  system.runInterval(() => {
-    if (!modOn("dupes")) return;
-    for (const player of world.getAllPlayers()) {
-      try {
-        const id = player.id;
-        const before = carried.get(id);
-        const counts = countCarried(player);
-        const illegal = counts["!illegal"];
-        delete counts["!illegal"];
-        carried.set(id, { counts, tick: system.currentTick });
-        if (!before) continue; // first look at this player, nothing to compare yet
-
-        // CrossBlades duels / FFA / kits clear and refill the inventory (and restore it afterwards).
-        // Those items come from nowhere by design, so do not judge the player during or just after.
-        let cbTag = false;
-        try { cbTag = player.getTags().some(t => t.startsWith("crossblades:") || t === "zc:grave"); } catch {}
-        if (cbTag) cbLast.set(id, system.currentTick);
-        const inGrace = system.currentTick - (cbLast.get(id) ?? -999999) < CONFIG.dupeKitGraceSec * 20;
-        if (inGrace) pending.delete(id);
-
-        // Gains that were unexplained last time: give late pickup events a chance to arrive.
-        const wait = pending.get(id);
-        if (wait) {
-          const stillGained = [];
-          for (const g of wait.gains) {
-            const left = takeCredit(id, g.item, g.amount);
-            if (left > 0) stillGained.push({ item: g.item, amount: left });
-          }
-          if (stillGained.length && wait.checksLeft > 0) {
-            wait.gains = stillGained; wait.checksLeft--;
-          } else {
-            pending.delete(id);
-            if (stillGained.length) {
-              const source = describeSource(player, system.currentTick);
-              const w = { location: player.location, dimension: player.dimension?.id };
-              emit("possible_dupe", { player: playerName(player), items: stillGained, source, ...w });
-              alertOperators(`Possible dupe: ${playerName(player)} gained ${stillGained.map(g => `${g.amount}x ${short(g.item)}`).join(", ")} | ${source}`);
-            }
-          }
-        }
-
-        const where = { location: player.location, dimension: player.dimension?.id };
-
-        if (illegal && before.illegal !== illegal) {
-          emit("illegal_stack", { player: playerName(player), stack: illegal, ...where });
-          alertOperators(`${playerName(player)} has an impossible stack: ${illegal}`);
-        }
-        carried.get(id).illegal = illegal;
-
-        let mode = "";
-        try { mode = String(player.getGameMode()).toLowerCase(); } catch {}
-        if (mode === "creative") continue;
-        if (inGrace) continue;
-        if (containerOpen.has(id) || (containerTick.get(id) ?? -1) >= before.tick) continue;
-
-        const gained = [];
-        let usedSomething = false;
-        for (const item of new Set([...Object.keys(counts), ...Object.keys(before.counts)])) {
-          const diff = (counts[item] ?? 0) - (before.counts[item] ?? 0);
-          if (diff < 0) usedSomething = true; // crafting, trading, eating ... not a dupe
-          if (diff > 0) {
-            const unexplained = takeCredit(id, item, diff);
-            if (unexplained > 0) gained.push({ item, amount: unexplained });
-          }
-        }
-        if (usedSomething) continue;
-        if (gained.length >= CONFIG.dupeBulkGainTypes) continue; // whole-inventory load (kit / restore)
-
-        const suspicious = gained.filter(g => watch.has(g.item) || g.amount >= CONFIG.dupeMinAmount);
-        if (suspicious.length === 0) continue;
-
-        // Do not flag yet: wait for the next check(s) in case the explaining event arrives late.
-        const old = pending.get(id);
-        pending.set(id, { gains: old ? [...old.gains, ...suspicious] : suspicious, checksLeft: CONFIG.dupeConfirmChecks });
-      } catch {}
-    }
-  }, CONFIG.dupeCheckTicks);
-}
+});
 
 // Movement sampling: deliberately throttled to avoid flooding the server log/Discord.
 if (CONFIG.logMovement) {
