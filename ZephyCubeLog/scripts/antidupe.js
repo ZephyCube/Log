@@ -1,14 +1,14 @@
 // Anti-dupe modules. Merged from "DupeGuard" (1.5.0) and "Anti Dupe Bundle" by GoodmorningDat, rewritten for this pack.
-// Every module is a switch in /zc:logmodules. What a module blocks is logged in the DUPE category and sent to staff.
+// Every module is a switch in /zc:logmodules. All are off by default except disable_bundles. What a module blocks is logged in the DUPE category and sent to staff.
 //
 //   anti_bundle        bundles put in hoppers, droppers, dispensers or crafters are removed (bundle hopper dupe)
-//   disable_bundles    (off by default) bundles cannot be used or carried: a bundle in a player's inventory is taken
+//   disable_bundles    (on by default) bundles cannot be used or carried: a bundle in a player's inventory is taken
 //                      away and its contents are given back (dropped at the player's feet when the inventory is full)
 //   anti_loop          two hoppers / droppers / dispensers feeding into each other cannot be made (by hand or with pistons)
 //   anti_crash_drop    items that spawn where a player disconnected, in the 3 seconds around it, are removed
 //   explosion_protect  explosions do not destroy containers: the contents and the container drop intact
 //   portal_protect     items thrown into a Nether portal go back to the nearest player
-//   inventory_sync     (off by default) remembers what each player carries; after a crash or rejoin, items that are
+//   inventory_sync     remembers what each player carries; after a crash or rejoin, items that are
 //                      more than the last saved count are removed. New items count only after 15 seconds.
 import { world, system } from "@minecraft/server";
 
@@ -353,11 +353,11 @@ export function startAntiDupe(on, report) {
 }
 
 export const ANTI_DUPE_MODULES = [
-  { key: "anti_bundle", label: "bundles in hoppers, droppers, dispensers and crafters are removed (from DupeGuard and Anti Dupe Bundle)" },
-  { key: "disable_bundles", label: "bundles are disabled: they cannot be used, and a carried bundle is removed with its contents given back (off by default)", defaultOff: true },
-  { key: "anti_loop", label: "hopper / dropper / dispenser loops cannot be built (by hand or with pistons)" },
-  { key: "anti_crash_drop", label: "items dropped where a player crashed or disconnected are removed" },
-  { key: "explosion_protect", label: "explosions drop containers and their contents intact instead of destroying them" },
-  { key: "portal_protect", label: "items thrown into a Nether portal go back to the nearest player" },
-  { key: "inventory_sync", label: "after a crash or rejoin, items above the last saved count are removed (strict, off by default)", defaultOff: true },
+  { key: "anti_bundle", label: "bundles in hoppers, droppers, dispensers and crafters are removed (from DupeGuard and Anti Dupe Bundle)", defaultOff: true },
+  { key: "disable_bundles", label: "bundles are disabled: they cannot be used, and a carried bundle is removed with its contents given back" },
+  { key: "anti_loop", label: "hopper / dropper / dispenser loops cannot be built (by hand or with pistons)", defaultOff: true },
+  { key: "anti_crash_drop", label: "items dropped where a player crashed or disconnected are removed", defaultOff: true },
+  { key: "explosion_protect", label: "explosions drop containers and their contents intact instead of destroying them", defaultOff: true },
+  { key: "portal_protect", label: "items thrown into a Nether portal go back to the nearest player", defaultOff: true },
+  { key: "inventory_sync", label: "after a crash or rejoin, items above the last saved count are removed (strict)", defaultOff: true },
 ];
