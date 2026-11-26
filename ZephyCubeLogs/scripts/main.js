@@ -2,11 +2,12 @@ import "./style.js";
 import * as mc from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { defineModules } from "./modules.js";
+import { registerPerms } from "./perms.js";
 
 const { world, system } = mc;
 
-// Modules (turn parts off with /zc:logsmodules <module> off). Event categories first, then extras.
-const modOn = defineModules("zclog", "zc:logsmodules", "Logs", [
+// Modules (/zc:logmodules opens a menu; /zc:logmodules <module> off also works). Event categories first, then extras.
+const modOn = defineModules("zclog", "zc:logmodules", "Logs", [
   { key: "player", label: "player events: join/leave, spawn, deaths, dimension, gamemode, emotes, effects, lag lines" },
   { key: "blocks", label: "block break, place, interact and explosions" },
   { key: "entities", label: "entity interact, hurt, death, projectiles, taming, mob farm notes" },
@@ -18,6 +19,7 @@ const modOn = defineModules("zclog", "zc:logsmodules", "Logs", [
   { key: "chat", label: "chat messages" },
   { key: "console", label: "copy of every log line to the server console / ContentLog file" },
   { key: "scanner", label: "chest scanner item (right-click a container to see its history)" },
+  { key: "player_tag", label: "store each player's name and id on the player (BedrockToolChest world editor)" },
 ]);
 
 /*
@@ -686,7 +688,8 @@ try {
     } catch (e) {
       console.warn(`[ZEPHYCUBE_LOGS] Could not register /zc:logs: ${e}`);
     }
-    console.warn("[ZEPHYCUBE_LOGS] registering commands: zc:logs, zc:tps");
+    console.warn("[ZEPHYCUBE_LOGS] registering commands: zc:logs, zc:tps, zc:perms");
+    try { registerPerms(init); } catch (e) { console.warn(`[ZEPHYCUBE_LOGS] Could not register /zc:perms: ${e}`); }
     try {
       init.customCommandRegistry.registerCommand(
         {
@@ -1619,4 +1622,11 @@ emit("server_logger_started", {
   title: "ZephyCubeLogs",
   author: "@iharvs",
   betaApisRequired: false
+});
+/* ---------- player name tagger (merged from "BedrockToolChest - Player Name Tagger" by Rob 'myGen') ----------
+ * On join, saves { name, id } as the player's dynamic property "player", so the BedrockToolChest world editor can
+ * show who a player entity in the world file is. */
+world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
+  if (!initialSpawn || !modOn("player_tag")) return;
+  try { player.setDynamicProperty("player", JSON.stringify({ name: player.name, id: player.id })); } catch {}
 });
