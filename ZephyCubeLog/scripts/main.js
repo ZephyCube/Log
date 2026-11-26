@@ -8,17 +8,17 @@ import { startAntiDupe, ANTI_DUPE_MODULES } from "./antidupe.js";
 const { world, system } = mc;
 
 // Modules (/zc:logmodules opens a menu; /zc:logmodules <module> off also works). Event categories first, then extras.
-const modOn = defineModules("zclog", "zc:logmodules", "Logs", [
-  { key: "player", label: "player events: join/leave, spawn, deaths, dimension, gamemode, emotes, effects, lag lines" },
-  { key: "blocks", label: "block break, place, interact and explosions" },
-  { key: "entities", label: "entity interact, hurt, death, projectiles, taming, mob farm notes" },
-  { key: "items", label: "item use, craft, drop, pickup, inventory changes, container take/put" },
-  { key: "redstone", label: "levers, buttons, pistons, pressure plates, tripwires, target blocks" },
-  { key: "staff_audit", label: "staff actions fed in by AdminTools (zc:audit)" },
-  { key: "movement", label: "throttled movement samples" },
-  { key: "chat", label: "chat messages" },
-  { key: "console", label: "copy of every log line to the server console / ContentLog file" },
-  { key: "scanner", label: "chest scanner item (right-click a container to see its history)" },
+const modOn = defineModules("zclog", "zc:logmodules", "Log", [
+  { key: "player", name: "Player events", label: "player events: join/leave, spawn, deaths, dimension, gamemode, emotes, effects, lag lines" },
+  { key: "blocks", name: "Block events", label: "block break, place, interact and explosions" },
+  { key: "entities", name: "Entity events", label: "entity interact, hurt, death, projectiles, taming, mob farm notes" },
+  { key: "items", name: "Item events", label: "item use, craft, drop, pickup, inventory changes, container take/put" },
+  { key: "redstone", name: "Redstone events", label: "levers, buttons, pistons, pressure plates, tripwires, target blocks" },
+  { key: "staff_audit", name: "Staff actions", label: "staff actions fed in by AdminTools (zc:audit)" },
+  { key: "movement", name: "Movement samples", label: "throttled movement samples" },
+  { key: "chat", name: "Chat messages", label: "chat messages" },
+  { key: "console", name: "Copy to ContentLog file", label: "copy of every log line to the server console / ContentLog file" },
+  { key: "scanner", name: "Chest scanner", label: "chest scanner item (right-click a container to see its history)" },
   ...ANTI_DUPE_MODULES,
 ]);
 

@@ -353,11 +353,11 @@ export function startAntiDupe(on, report) {
 }
 
 export const ANTI_DUPE_MODULES = [
-  { key: "anti_bundle", label: "bundles in hoppers, droppers, dispensers and crafters are removed (from DupeGuard and Anti Dupe Bundle)", defaultOff: true },
-  { key: "disable_bundles", label: "bundles are disabled: they cannot be used, and a carried bundle is removed with its contents given back" },
-  { key: "anti_loop", label: "hopper / dropper / dispenser loops cannot be built (by hand or with pistons)", defaultOff: true },
-  { key: "anti_crash_drop", label: "items dropped where a player crashed or disconnected are removed", defaultOff: true },
-  { key: "explosion_protect", label: "explosions drop containers and their contents intact instead of destroying them", defaultOff: true },
-  { key: "portal_protect", label: "items thrown into a Nether portal go back to the nearest player", defaultOff: true },
-  { key: "inventory_sync", label: "after a crash or rejoin, items above the last saved count are removed (strict)", defaultOff: true },
+  { key: "anti_bundle", name: "Anti-dupe: bundles in hoppers", label: "bundles in hoppers, droppers, dispensers and crafters are removed (from DupeGuard and Anti Dupe Bundle)", defaultOff: true },
+  { key: "disable_bundles", name: "Disable bundles", label: "bundles are disabled: they cannot be used, and a carried bundle is removed with its contents given back" },
+  { key: "anti_loop", name: "Anti-dupe: hopper loops", label: "hopper / dropper / dispenser loops cannot be built (by hand or with pistons)", defaultOff: true },
+  { key: "anti_crash_drop", name: "Anti-dupe: crash drops", label: "items dropped where a player crashed or disconnected are removed", defaultOff: true },
+  { key: "explosion_protect", name: "Anti-dupe: explosion protection", label: "explosions drop containers and their contents intact instead of destroying them", defaultOff: true },
+  { key: "portal_protect", name: "Anti-dupe: portal protection", label: "items thrown into a Nether portal go back to the nearest player", defaultOff: true },
+  { key: "inventory_sync", name: "Anti-dupe: inventory sync", label: "after a crash or rejoin, items above the last saved count are removed (strict)", defaultOff: true },
 ];
