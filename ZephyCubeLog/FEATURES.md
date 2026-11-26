@@ -1,4 +1,4 @@
-# ZephyCube Log 1.8.1
+# ZephyCube Log 1.8.2
 
 Activity logger with an in-game viewer, a chest scanner and a TPS monitor. Originally created by iHarvs (@iharvs). Logs are stored in the world, one set per day.
 
@@ -20,16 +20,16 @@ Activity logger with an in-game viewer, a chest scanner and a TPS monitor. Origi
 | `player_tag` | on join, saves the player's name and id as the player's dynamic property `player`, so the BedrockToolChest world editor can identify player entities. Merged from "BedrockToolChest - Player Name Tagger" by Rob 'myGen' |
 
 ## Anti-dupe (modules)
-Merged from DupeGuard 1.5.0 and Anti Dupe Bundle by GoodmorningDat, rewritten for this pack. They replace the old "possible dupe" and "impossible stack" hints: dupes are now blocked. Everything they block is logged in the DUPE category of the viewer (the "Anti-dupe" filter) and sent to operators and `zc_logs` players.
+Merged from DupeGuard 1.5.0 and Anti Dupe Bundle by GoodmorningDat, rewritten for this pack. They replace the old "possible dupe" and "impossible stack" hints: dupes are now blocked. All are off by default except `disable_bundles`; turn the others on in `/zc:logmodules`. Everything they block is logged in the DUPE category of the viewer (the "Anti-dupe" filter) and sent to operators and `zc_logs` players.
 
 | Module | Default | What it does |
 | --- | --- | --- |
-| `anti_bundle` | on | Bundles put in hoppers, droppers, dispensers or crafters are removed (bundle hopper dupe). Watched: blocks a player opens while carrying a bundle (2 min), and blocks under bundles lying on the ground |
-| `disable_bundles` | off | Bundles are disabled: using one is cancelled, and every second a bundle in a player's inventory or off hand is removed and its contents are given back (dropped at their feet if the inventory is full). Crafting a bundle cannot be blocked by a script, but the bundle is removed right away |
-| `anti_loop` | on | Hoppers, droppers or dispensers that feed into each other cannot be made: placing a hopper into one that points at it is cancelled; a dropper/dispenser loop pops off; a loop pushed together by a piston pops off (only the moved blocks are checked) |
-| `anti_crash_drop` | on | Items that spawn within 3 blocks of where a player disconnected, in the 3 seconds around it, are removed (crash drop dupe). Drops from a death there (e.g. a combat-log kill) are kept |
-| `explosion_protect` | on | Explosions do not destroy containers: the container and its contents drop intact |
-| `portal_protect` | on | Items thrown into a Nether portal are given back to the nearest player (portal dupe) |
+| `anti_bundle` | off | Bundles put in hoppers, droppers, dispensers or crafters are removed (bundle hopper dupe). Watched: blocks a player opens while carrying a bundle (2 min), and blocks under bundles lying on the ground |
+| `disable_bundles` | on | Bundles are disabled: using one is cancelled, and every second a bundle in a player's inventory or off hand is removed and its contents are given back (dropped at their feet if the inventory is full). Crafting a bundle cannot be blocked by a script, but the bundle is removed right away |
+| `anti_loop` | off | Hoppers, droppers or dispensers that feed into each other cannot be made: placing a hopper into one that points at it is cancelled; a dropper/dispenser loop pops off; a loop pushed together by a piston pops off (only the moved blocks are checked) |
+| `anti_crash_drop` | off | Items that spawn within 3 blocks of where a player disconnected, in the 3 seconds around it, are removed (crash drop dupe). Drops from a death there (e.g. a combat-log kill) are kept |
+| `explosion_protect` | off | Explosions do not destroy containers: the container and its contents drop intact |
+| `portal_protect` | off | Items thrown into a Nether portal are given back to the nearest player (portal dupe) |
 | `inventory_sync` | off | Strict: remembers what each player carries; on join, items above the last saved count are removed. New items count after 15 seconds |
 
 Other built-in behaviour: farm animals killed in bulk are detected as a mob farm and logging stops there; common mob kills and common blocks are kept out of the console file; a LAG line is logged when TPS drops under 15; every player's inventory is snapshotted so a death can list what they carried.

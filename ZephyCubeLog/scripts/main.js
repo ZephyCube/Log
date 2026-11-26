@@ -24,7 +24,7 @@ const modOn = defineModules("zclog", "zc:logmodules", "Logs", [
 ]);
 
 /*
- * ZephyCubeLogs
+ * ZephyCube Log (formerly ZephyCubeLogs)
  * Author: @iharvs
  *
  * NO Beta APIs are used.
@@ -494,16 +494,16 @@ async function showForm(form, player) {
 async function openLogMenu(player) {
   try {
     if (!canViewLogs(player)) {
-      player.sendMessage("§cOnly operators can read ZephyCubeLogs.");
+      player.sendMessage("§cOnly operators can read ZephyCube Log.");
       return;
     }
     flushToDatabase();
     for (;;) {
       const index = loadIndex();
       const days = Object.keys(index).sort().reverse();
-      if (days.length === 0) { player.sendMessage("§eZephyCubeLogs: nothing saved yet."); return; }
+      if (days.length === 0) { player.sendMessage("§eZephyCube Log: nothing saved yet."); return; }
 
-      const menu = new ActionFormData().title("ZephyCubeLogs").body("Pick a day:");
+      const menu = new ActionFormData().title("ZephyCube Log").body("Pick a day:");
       for (const day of days) menu.button(`${day}\n${index[day].lines} lines`);
       const pick = await showForm(menu, player);
       if (pick.canceled) return;
@@ -555,7 +555,7 @@ function loadPages(day, cat, search) {
 
 async function openDay(player, day) {
   for (;;) {
-    const menu = new ActionFormData().title("ZephyCubeLogs").body(`§l§6${day}§r§f\nWhat do you want to see?`);
+    const menu = new ActionFormData().title("ZephyCube Log").body(`§l§6${day}§r§f\nWhat do you want to see?`);
     for (const f of FILTERS) menu.button(f.label);
     menu.button("Back to days");
     const pick = await showForm(menu, player);
@@ -565,7 +565,7 @@ async function openDay(player, day) {
     const filter = FILTERS[pick.selection];
     let cat = filter.cat, search = null, label = filter.label.split("\n")[0];
     if (cat === "search") {
-      const ask = new ModalFormData().title("ZephyCubeLogs").textField("Show only logs containing:", "player name, block, item ...");
+      const ask = new ModalFormData().title("ZephyCube Log").textField("Show only logs containing:", "player name, block, item ...");
       const res = await showForm(ask, player);
       if (res.canceled) continue;
       search = String(res.formValues?.[0] ?? "").trim();
@@ -589,7 +589,7 @@ async function viewPages(player, day, cat, search, label) {
 
     const header = `§l§6${day}§r§f - ${label} - page ${pages.length ? page + 1 : 0} of ${pages.length}`;
     const form = new ActionFormData()
-      .title("ZephyCubeLogs")
+      .title("ZephyCube Log")
       .body(`${header}\n\n${pages[page] ?? "§7Nothing here yet."}`);
     const buttons = [];
     if (page > 0) { form.button("Older"); buttons.push("older"); }
@@ -645,7 +645,7 @@ function tpsReport() {
   const worst = tpsLog.length ? Math.min(...tpsLog.map(x => x.tps)) : null;
   let ents = 0;
   try { for (const d of ["overworld", "nether", "the_end"]) ents += world.getDimension(d).getEntities().length; } catch {}
-  return `§6[ZephyCubeLogs] TPS§r now ${c(n10)}${f(n10)}§r | 1m ${c(m1)}${f(m1)}§r | 5m ${c(m5)}${f(m5)}§r | worst ${c(worst)}${f(worst)}§r | players ${world.getAllPlayers().length} | entities ${ents}`;
+  return `§6[ZephyCube Log] TPS§r now ${c(n10)}${f(n10)}§r | 1m ${c(m1)}${f(m1)}§r | 5m ${c(m5)}${f(m5)}§r | worst ${c(worst)}${f(worst)}§r | players ${world.getAllPlayers().length} | entities ${ents}`;
 }
 
 // Way 1: the commands /zc:logs and /zc:tps (works with cheats off). A pack can only use ONE command namespace.
@@ -655,7 +655,7 @@ try {
       init.customCommandRegistry.registerCommand(
         {
           name: "zc:logs",
-          description: "Open the ZephyCubeLogs viewer",
+          description: "Open the ZephyCube Log viewer",
           permissionLevel: mc.CommandPermissionLevel?.Any ?? 0,
           cheatsRequired: false
         },
@@ -1381,7 +1381,7 @@ if (CONFIG.logMovement) {
 }
 
 emit("server_logger_started", {
-  title: "ZephyCubeLogs",
+  title: "ZephyCube Log",
   author: "@iharvs",
   betaApisRequired: false
 });
