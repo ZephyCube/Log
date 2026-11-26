@@ -6,7 +6,7 @@ import * as mc from "@minecraft/server";
 const { world, Player, ScreenDisplay } = mc;
 
 const PREFIX = "§7[§6ZephyCube§7]§r ";
-const TAGS = ["ZephyCubeLogs"]; // old "[Tag]" lead-ins that the prefix replaces
+const TAGS = ["ZephyCubeLogs", "ZephyCube Log"]; // old "[Tag]" lead-ins that the prefix replaces
 const CODE = /§[0-9a-fg-v]/g;
 const TAG_RE = TAGS.length
   ? new RegExp("^((?:§[0-9a-v])*)\\[(?:§[klmnor0-9a-v])*(?:" + TAGS.map((t) => [...t].map((c) => c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("(?:§[0-9a-v])*")).join("|") + ")(?:§[0-9a-v])*\\](?:§r)?:?")
