@@ -19,7 +19,6 @@ const modOn = defineModules("zclog", "zc:logmodules", "Logs", [
   { key: "chat", label: "chat messages" },
   { key: "console", label: "copy of every log line to the server console / ContentLog file" },
   { key: "scanner", label: "chest scanner item (right-click a container to see its history)" },
-  { key: "player_tag", label: "store each player's name and id on the player (BedrockToolChest world editor)" },
   ...ANTI_DUPE_MODULES,
 ]);
 
@@ -1385,10 +1384,10 @@ emit("server_logger_started", {
   author: "@iharvs",
   betaApisRequired: false
 });
-/* ---------- player name tagger (merged from "BedrockToolChest - Player Name Tagger" by Rob 'myGen') ----------
+/* ---------- player name tagger (merged from "BedrockToolChest - Player Name Tagger" by Rob 'myGen'), always on ----------
  * On join, saves { name, id } as the player's dynamic property "player", so the BedrockToolChest world editor can
  * show who a player entity in the world file is. */
 world.afterEvents.playerSpawn.subscribe(({ player, initialSpawn }) => {
-  if (!initialSpawn || !modOn("player_tag")) return;
+  if (!initialSpawn) return; // always on
   try { player.setDynamicProperty("player", JSON.stringify({ name: player.name, id: player.id })); } catch {}
 });

@@ -1,4 +1,4 @@
-# ZephyCube Log 1.8.2
+# ZephyCube Log 1.8.3
 
 Activity logger with an in-game viewer, a chest scanner and a TPS monitor. Originally created by iHarvs (@iharvs). Logs are stored in the world, one set per day.
 
@@ -17,7 +17,6 @@ Activity logger with an in-game viewer, a chest scanner and a TPS monitor. Origi
 | `chat` | chat messages |
 | `console` | copy of each line to the server console / ContentLog file (needs `content-log-file-enabled=true`), rate limited per player and event type |
 | `scanner` | chest scanner: right-click a container to see who opened it, what was taken or put in, and who broke or placed it |
-| `player_tag` | on join, saves the player's name and id as the player's dynamic property `player`, so the BedrockToolChest world editor can identify player entities. Merged from "BedrockToolChest - Player Name Tagger" by Rob 'myGen' |
 
 ## Anti-dupe (modules)
 Merged from DupeGuard 1.5.0 and Anti Dupe Bundle by GoodmorningDat, rewritten for this pack. They replace the old "possible dupe" and "impossible stack" hints: dupes are now blocked. All are off by default except `disable_bundles`; turn the others on in `/zc:logmodules`. Everything they block is logged in the DUPE category of the viewer (the "Anti-dupe" filter) and sent to operators and `zc_logs` players.
@@ -32,7 +31,7 @@ Merged from DupeGuard 1.5.0 and Anti Dupe Bundle by GoodmorningDat, rewritten fo
 | `portal_protect` | off | Items thrown into a Nether portal are given back to the nearest player (portal dupe) |
 | `inventory_sync` | off | Strict: remembers what each player carries; on join, items above the last saved count are removed. New items count after 15 seconds |
 
-Other built-in behaviour: farm animals killed in bulk are detected as a mob farm and logging stops there; common mob kills and common blocks are kept out of the console file; a LAG line is logged when TPS drops under 15; every player's inventory is snapshotted so a death can list what they carried.
+Other built-in behaviour: on join, every player's name and id are saved as the player's dynamic property `player`, so the BedrockToolChest world editor can identify player entities (merged from "BedrockToolChest - Player Name Tagger" by Rob 'myGen'; always on); farm animals killed in bulk are detected as a mob farm and logging stops there; common mob kills and common blocks are kept out of the console file; a LAG line is logged when TPS drops under 15; every player's inventory is snapshotted so a death can list what they carried.
 
 ## Commands
 | Command | Who | Use |
