@@ -1,4 +1,4 @@
-# ZephyCube Log 1.8.0
+# ZephyCube Log 1.8.1
 
 Activity logger with an in-game viewer, a chest scanner and a TPS monitor. Originally created by iHarvs (@iharvs). Logs are stored in the world, one set per day.
 
@@ -25,6 +25,7 @@ Merged from DupeGuard 1.5.0 and Anti Dupe Bundle by GoodmorningDat, rewritten fo
 | Module | Default | What it does |
 | --- | --- | --- |
 | `anti_bundle` | on | Bundles put in hoppers, droppers, dispensers or crafters are removed (bundle hopper dupe). Watched: blocks a player opens while carrying a bundle (2 min), and blocks under bundles lying on the ground |
+| `disable_bundles` | off | Bundles are disabled: using one is cancelled, and every second a bundle in a player's inventory or off hand is removed and its contents are given back (dropped at their feet if the inventory is full). Crafting a bundle cannot be blocked by a script, but the bundle is removed right away |
 | `anti_loop` | on | Hoppers, droppers or dispensers that feed into each other cannot be made: placing a hopper into one that points at it is cancelled; a dropper/dispenser loop pops off; a loop pushed together by a piston pops off (only the moved blocks are checked) |
 | `anti_crash_drop` | on | Items that spawn within 3 blocks of where a player disconnected, in the 3 seconds around it, are removed (crash drop dupe). Drops from a death there (e.g. a combat-log kill) are kept |
 | `explosion_protect` | on | Explosions do not destroy containers: the container and its contents drop intact |

@@ -2,6 +2,8 @@
 // Every module is a switch in /zc:logmodules. What a module blocks is logged in the DUPE category and sent to staff.
 //
 //   anti_bundle        bundles put in hoppers, droppers, dispensers or crafters are removed (bundle hopper dupe)
+//   disable_bundles    (off by default) bundles cannot be used or carried: a bundle in a player's inventory is taken
+//                      away and its contents are given back (dropped at the player's feet when the inventory is full)
 //   anti_loop          two hoppers / droppers / dispensers feeding into each other cannot be made (by hand or with pistons)
 //   anti_crash_drop    items that spawn where a player disconnected, in the 3 seconds around it, are removed
 //   explosion_protect  explosions do not destroy containers: the contents and the container drop intact
@@ -81,6 +83,43 @@ export function startAntiDupe(on, report) {
       } catch { tracked.delete(k); }
     }
   }, 10);
+
+  // ---------------------------------------------------------------- disable_bundles (off by default)
+  world.beforeEvents.itemUse.subscribe((ev) => {
+    try {
+      if (!on("disable_bundles") || !isBundle(ev.itemStack?.typeId)) return;
+      ev.cancel = true;
+      const p = ev.source;
+      system.run(() => { try { p.sendMessage("§cBundles are disabled on this server."); } catch { } });
+    } catch { }
+  });
+  function unpackBundles(p) {
+    const inv = p.getComponent("minecraft:inventory")?.container;
+    const eq = p.getComponent("minecraft:equippable");
+    const found = [];
+    if (inv) for (let i = 0; i < inv.size; i++) { const it = inv.getItem(i); if (isBundle(it?.typeId)) { found.push(it); inv.setItem(i, undefined); } }
+    const off = eq?.getEquipment("Offhand");
+    if (isBundle(off?.typeId)) { found.push(off); eq.setEquipment("Offhand", undefined); }
+    if (!found.length) return;
+    let returned = 0;
+    for (const b of found) {
+      const c = b.getComponent("minecraft:inventory")?.container;
+      if (!c) continue;
+      for (let i = 0; i < c.size; i++) {
+        const it = c.getItem(i);
+        if (!it) continue;
+        returned += it.amount;
+        const left = inv ? inv.addItem(it) : it;
+        if (left) p.dimension.spawnItem(left, p.location);
+      }
+    }
+    p.sendMessage(`§cBundles are disabled on this server: ${found.length} bundle(s) removed${returned ? `, ${returned} item(s) inside were given back` : ""}.`);
+    report(`${p.name}: ${found.length} bundle(s) removed, contents given back (bundles disabled)`, { player: p.name, location: fl(p.location), dimension: p.dimension.id });
+  }
+  system.runInterval(() => {
+    if (!on("disable_bundles")) return;
+    for (const p of world.getAllPlayers()) { try { unpackBundles(p); } catch { } }
+  }, 20);
 
   // ---------------------------------------------------------------- anti_loop
   function facing(b) { try { const f = b.permutation.getState("facing_direction"); return typeof f === "number" ? f : undefined; } catch { return undefined; } }
@@ -315,6 +354,7 @@ export function startAntiDupe(on, report) {
 
 export const ANTI_DUPE_MODULES = [
   { key: "anti_bundle", label: "bundles in hoppers, droppers, dispensers and crafters are removed (from DupeGuard and Anti Dupe Bundle)" },
+  { key: "disable_bundles", label: "bundles are disabled: they cannot be used, and a carried bundle is removed with its contents given back (off by default)", defaultOff: true },
   { key: "anti_loop", label: "hopper / dropper / dispenser loops cannot be built (by hand or with pistons)" },
   { key: "anti_crash_drop", label: "items dropped where a player crashed or disconnected are removed" },
   { key: "explosion_protect", label: "explosions drop containers and their contents intact instead of destroying them" },
