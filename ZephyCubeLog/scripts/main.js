@@ -23,7 +23,28 @@ const modOn = defineModules("zclog", "zc:logmodules", "Log", [
   { key: "invsee", name: "InvSee", label: "operators view and edit a player's inventory, armor and off hand (/zc:invsee or the Inventory Viewer item)" },
   ...ANTI_DUPE_MODULES,
 ]);
-globalThis.__zcInvseeOn = () => modOn("invsee"); // read by invsee.js
+// InvSee (invsee.js) asks this before its command or the Inventory Viewer item does anything: a message = not allowed.
+// Staff: operators, or the tags admin / moderator / mod, or zc:invsee (set in /zc:perms).
+function isInvseeStaff(p) {
+  try {
+    if (["admin", "moderator", "mod", "zc:invsee"].some(t => p.hasTag(t))) return true;
+    const level = p.playerPermissionLevel;
+    return typeof level === "number" ? level >= 2 : level === "Operator";
+  } catch { return false; }
+}
+globalThis.__zcInvseeGate = (p) => {
+  if (!modOn("invsee")) return "InvSee is turned off. Turn it on with /zc:logmodules invsee on";
+  if (p?.typeId === "minecraft:player" && !isInvseeStaff(p)) return "Only staff can use InvSee.";
+  return undefined;
+};
+// the item gives no feedback by itself when it is blocked
+world.afterEvents.itemStartUse.subscribe(e => {
+  try {
+    if (e.itemStack?.typeId !== "r4isen1920_invsee:inventory") return;
+    const m = globalThis.__zcInvseeGate(e.source);
+    if (m) e.source.sendMessage(`§c${m}`);
+  } catch {}
+});
 
 /*
  * ZephyCube Log (formerly ZephyCubeLogs)
