@@ -5,6 +5,7 @@ import { defineModules } from "./modules.js";
 import { registerPerms } from "./perms.js";
 import { startAntiDupe, ANTI_DUPE_MODULES } from "./antidupe.js";
 import "./invsee.js"; // InvSee by r4isen1920, the "invsee" module
+import { startEnderSee } from "./endersee.js";
 
 const { world, system } = mc;
 
@@ -20,14 +21,15 @@ const modOn = defineModules("zclog", "zc:logmodules", "Log", [
   { key: "chat", name: "Chat messages", label: "chat messages" },
   { key: "console", name: "Copy to ContentLog file", label: "copy of every log line to the server console / ContentLog file" },
   { key: "scanner", name: "Chest scanner", label: "chest scanner item (right-click a container to see its history)" },
+  { key: "endersee", name: "EnderSee", label: "staff open an online player's ender chest to view and edit it (/zc:endersee); every change is logged as a staff action" },
   { key: "invsee", name: "InvSee", label: "operators view and edit a player's inventory, armor and off hand (/zc:invsee or the Inventory Viewer item)" },
   ...ANTI_DUPE_MODULES,
 ]);
 // InvSee (invsee.js) asks this before its command or the Inventory Viewer item does anything: a message = not allowed.
-// Staff: operators, or the tags admin / moderator / mod, or zc:invsee (set in /zc:perms).
-function isInvseeStaff(p) {
+// Staff: operators, or the tags admin / moderator / mod, or the feature's own tag (zc:invsee / zc:endersee, set in /zc:perms).
+function isInvseeStaff(p, tag = "zc:invsee") {
   try {
-    if (["admin", "moderator", "mod", "zc:invsee"].some(t => p.hasTag(t))) return true;
+    if (["admin", "moderator", "mod", tag].some(t => p.hasTag(t))) return true;
     const level = p.playerPermissionLevel;
     return typeof level === "number" ? level >= 2 : level === "Operator";
   } catch { return false; }
@@ -37,6 +39,12 @@ globalThis.__zcInvseeGate = (p) => {
   if (p?.typeId === "minecraft:player" && !isInvseeStaff(p)) return "Only staff can use InvSee.";
   return undefined;
 };
+// EnderSee (endersee.js): same staff rule, its own switch and tag; every change is a STAFF line in the log
+startEnderSee(
+  p => (!modOn("endersee") ? "EnderSee is turned off. Turn it on with /zc:logmodules endersee on"
+    : p?.typeId === "minecraft:player" && !isInvseeStaff(p, "zc:endersee") ? "Only staff can use EnderSee." : undefined),
+  (staff, action, target, detail) => emit("staff_audit", { player: staff, action: `${action} ${target}`, detail })
+);
 // the item gives no feedback by itself when it is blocked
 world.afterEvents.itemStartUse.subscribe(e => {
   try {

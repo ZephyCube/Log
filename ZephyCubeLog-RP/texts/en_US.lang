@@ -18,3 +18,7 @@ gui.invsee.matchFound.plural=Found the following players:
 gui.invsee.searchAgain=Search Again
 gui.invsee.ownInventory=You can't view your own inventory this way. Please select another player.
 gui.invsee.back=Go Back
+
+action.hint.exit.zc:ender_viewer=Tap the §lInventory button§r to open their Ender Chest
+action.hint.exit.console.zc:ender_viewer=Press §l:_input_key.inventory:§r to open their Ender Chest
+entity.zc:ender_viewer.name=[Ender Chest Viewer]
