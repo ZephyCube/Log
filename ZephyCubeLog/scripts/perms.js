@@ -13,6 +13,7 @@ const { world, system } = mc;
 // tag: the plain tag. bit: AdminTools bitmask bit, or undefined when there is none.
 export const PERMS = [
   { tag: "zc_logs", label: "Log: open the viewer and chest scanner", addon: "Log" },
+  { tag: "zc:invsee", label: "InvSee: view and edit players' inventories (staff tags admin/moderator/mod also allow it)", addon: "Log" },
   { tag: "zc:border_bypass", bit: 8, label: "Border bypass: can cross the world border", addon: "Border" },
   { tag: "zc:lag_alert", bit: 10, label: "Lag alerts: low TPS and mob cap messages", addon: "AntiLag" },
   { tag: "zc:combat_bypass", label: "Combat bypass: never combat tagged", addon: "AntiCombat" },
