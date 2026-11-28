@@ -1,0 +1,36 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "ZephyCube Log RP",
+    "description": "InvSee (by r4isen1920) inventory viewer screen and texts",
+    "uuid": "24bba037-30f6-545f-8843-9f86594e11e7",
+    "version": [
+      1,
+      9,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      26,
+      30
+    ]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "bcbd7a14-f19f-5b57-8b5e-5391aef2a507",
+      "version": [
+        1,
+        9,
+        0
+      ]
+    }
+  ],
+  "metadata": {
+    "authors": [
+      "@iharvs",
+      "r4isen1920",
+      "ZephyCube"
+    ]
+  }
+}

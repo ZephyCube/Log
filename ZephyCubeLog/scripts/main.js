@@ -4,6 +4,7 @@ import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { defineModules } from "./modules.js";
 import { registerPerms } from "./perms.js";
 import { startAntiDupe, ANTI_DUPE_MODULES } from "./antidupe.js";
+import "./invsee.js"; // InvSee by r4isen1920, the "invsee" module
 
 const { world, system } = mc;
 
@@ -19,8 +20,10 @@ const modOn = defineModules("zclog", "zc:logmodules", "Log", [
   { key: "chat", name: "Chat messages", label: "chat messages" },
   { key: "console", name: "Copy to ContentLog file", label: "copy of every log line to the server console / ContentLog file" },
   { key: "scanner", name: "Chest scanner", label: "chest scanner item (right-click a container to see its history)" },
+  { key: "invsee", name: "InvSee", label: "operators view and edit a player's inventory, armor and off hand (/zc:invsee or the Inventory Viewer item)" },
   ...ANTI_DUPE_MODULES,
 ]);
+globalThis.__zcInvseeOn = () => modOn("invsee"); // read by invsee.js
 
 /*
  * ZephyCube Log (formerly ZephyCubeLogs)
