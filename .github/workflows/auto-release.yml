@@ -39,11 +39,16 @@ jobs:
             rm -rf build && mkdir -p build/src && git archive "$1" | tar -x -C build/src
             if [ -n "$LEGACY" ] && [ ! -d "build/src/$PACK" ] && [ -d "build/src/$LEGACY" ]; then mv "build/src/$LEGACY" "build/src/$PACK"; fi
             local name="$PACK-$2"
-            # Zip: only the pack folder. .mcpack: the pack files at the root. -BP.mcaddon: the behavior pack folder.
-            (cd build/src && zip -qr "../$name.zip" "$PACK")
+            # Zip: the pack folder (and its resource pack, if it has one). .mcpack: the behavior pack files at the root.
+            # -BP.mcaddon / -RP.mcaddon: the behavior / resource pack folder.
+            (cd build/src && zip -qr "../$name.zip" "$PACK" $(ls -d "$PACK-RP" 2>/dev/null))
             (cd "build/src/$PACK" && zip -qr "../../$name.mcpack" .)
             (cd build/src && zip -qr "../$name-BP.mcaddon" "$PACK")
             FILES=("build/$name.zip" "build/$name.mcpack" "build/$name-BP.mcaddon")
+            if [ -d "build/src/$PACK-RP" ]; then
+              (cd build/src && zip -qr "../$name-RP.mcaddon" "$PACK-RP")
+              FILES+=("build/$name-RP.mcaddon")
+            fi
           }
           declare -A SEEN=()
           for sha in $(git rev-list --reverse HEAD); do
