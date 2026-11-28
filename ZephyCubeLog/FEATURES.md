@@ -1,4 +1,4 @@
-# ZephyCube Log 1.9.1
+# ZephyCube Log 1.10.0
 
 Activity logger with an in-game viewer, a chest scanner and a TPS monitor. Originally created by iHarvs (@iharvs). Logs are stored in the world, one set per day. Needs Minecraft 1.26.30 or newer (since 1.9.0, for InvSee) and the Log resource pack.
 
@@ -17,6 +17,7 @@ Activity logger with an in-game viewer, a chest scanner and a TPS monitor. Origi
 | Chat messages (`chat`) | chat messages |
 | Copy to ContentLog file (`console`) | copy of each line to the server console / ContentLog file (needs `content-log-file-enabled=true`), rate limited per player and event type |
 | Chest scanner (`scanner`) | chest scanner: right-click a container to see who opened it, what was taken or put in, and who broke or placed it |
+| EnderSee (`endersee`) | staff (operators, or players with the tag `admin`, `moderator`, `mod` or `zc:endersee`) open an online player's ender chest as a normal chest screen and change it: `/zc:endersee [player]`, then press the inventory key. Changes go straight to the player's real ender chest (enchantments, names and shulker contents are kept), and every item taken or put is logged as a STAFF line. If both change the same slot at the same moment, the player's ender chest wins. Offline players cannot be opened |
 | InvSee (`invsee`) | staff (operators, or players with the tag `admin`, `moderator`, `mod` or `zc:invsee`) open a player's inventory, armor and off hand and change them; for everyone else the command and the item do nothing: `/zc:invsee [player]`, or use the Inventory Viewer item (`/give @s r4isen1920_invsee:inventory`) and pick a player. InvSee v2.0.0 by r4isen1920, merged; needs the Log resource pack for its screen |
 
 ## Anti-dupe (modules)
@@ -40,6 +41,7 @@ Other built-in behaviour: on join, every player's name and id are saved as the p
 | `/zc:logs` | operators, or players with the `zc_logs` tag | Open the viewer (pick a day, filter Player/Blocks/Entity/Items/Redstone/Dupe/Staff, search) |
 | `/zc:tps` | operators | Show server TPS |
 | `/zc:logmodules [module] [on\|off]` | operators | Open the modules menu, or turn one module on or off |
+| `/zc:endersee [player]` | staff (operators, tags `admin` / `moderator` / `mod` / `zc:endersee`) | Open a player's ender chest to view and edit it (EnderSee); without a player, a menu to pick one |
 | `/zc:invsee [player]` | staff (operators, tags `admin` / `moderator` / `mod` / `zc:invsee`) | Open a player's inventory to view and edit it (InvSee); without a player, a menu to pick one |
 | `/zc:perms [player]` | operators | Permissions menu for all ZephyCube add-ons: pick a player, then switch each permission tag on or off (from the console it lists who has what) |
 
@@ -61,6 +63,7 @@ Every permission tag that a ZephyCube add-on reads, in one place. Turning one on
 | Permission | Tag | AdminTools bit | Add-on |
 | --- | --- | --- | --- |
 | Open the logs viewer and chest scanner | `zc_logs` | none | Log |
+| Use EnderSee (also allowed by the tags `admin`, `moderator`, `mod` and by operator permission) | `zc:endersee` | none | Log |
 | Use InvSee (also allowed by the tags `admin`, `moderator`, `mod` and by operator permission) | `zc:invsee` | none | Log |
 | Cross the world border | `zc:border_bypass` | 8 | Border |
 | Low-TPS and mob cap alerts | `zc:lag_alert` | 10 | AntiLag |
